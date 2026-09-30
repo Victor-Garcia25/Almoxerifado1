@@ -154,8 +154,6 @@
     </div>
 
     <script>
-        let itensEstoque = [];
-
         async function inicializar() {
             await carregarEstoque();
             await carregarHistorico();
@@ -164,19 +162,18 @@
         async function carregarEstoque() {
             try {
                 const res = await fetch('/api/estoque');
-                itensEstoque = await res.json();
+                const itensEstoque = await res.json();
                 const corpo = document.getElementById('tabela-estoque');
                 const banner = document.getElementById('banner-alerta');
                 corpo.innerHTML = '';
 
                 let possuiCritico = false;
 
-                if (!Array.isArray(itensEstoque)) return;
+                if (!Array.isArray(itensEstoque)) {
+                    corpo.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 20px; color: red;">Resposta incorreta do servidor.</td></tr>`;
+                    return;
+                }
 
                 itensEstoque.forEach(item => {
                     if (item.quantidade <= 1) possuiCritico = true;
-
-                    const estoqueBaixo = item.quantidade <= item.quantidade_minima;
-                    let statusTxt = 'OK';
-                    let statusClasse = 'status-ok';
 
