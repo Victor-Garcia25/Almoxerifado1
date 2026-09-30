@@ -1,12 +1,12 @@
 {
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/public/$1"
-    }
+  "version": 2,
+  "cleanUrls": true,
+  "builds": [
+    { "src": "api/estoque.js", "use": "@vercel/node" },
+    { "src": "public/**", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/estoque", "dest": "api/estoque.js" },
+    { "src": "/(.*)", "dest": "public/$1" }
   ]
 }
