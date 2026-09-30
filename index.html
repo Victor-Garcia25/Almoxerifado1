@@ -4,52 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Almoxerifado Smart</title>
-    <script src="https://tailwindcss.com"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { bg-color: #f3f4f6; background-color: #f3f4f6; color: #1f2937; padding: 24px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        h1 { font-size: 28px; color: #111827; }
+        .btn-novo { background-color: #2563eb; color: white; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; rounded-radius: 8px; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn-novo:hover { background-color: #1d4ed8; }
+        .tabela-container { background-color: white; border-radius: 12px; shadow: 0 4px 6px rgba(0,0,0,0.05); box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e5e7eb; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background-color: #f9fafb; padding: 14px 20px; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
+        td { padding: 16px 20px; border-bottom: 1px solid #e5e7eb; font-size: 15px; }
+        tr:hover { background-color: #f9fafb; }
+        .status-badge { padding: 4px 8px; font-size: 12px; font-weight: 600; border-radius: 9999px; }
+        .status-ok { background-color: #d1fae5; color: #065f46; }
+        .status-baixo { background-color: #fee2e2; color: #991b1b; }
+        .qtd-ok { color: #16a34a; font-weight: bold; }
+        .qtd-baixo { color: #dc2626; font-weight: bold; }
+        .btn-acao { background-color: #e5e7eb; border: none; padding: 6px 12px; font-weight: bold; font-size: 16px; border-radius: 4px; cursor: pointer; margin-right: 4px; }
+        .btn-acao:hover { background-color: #d1d5db; }
+        
+        /* Modal estilizado ocultável */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: white; padding: 24px; border-radius: 12px; width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal-content h2 { margin-bottom: 16px; font-size: 20px; color: #111827; }
+        .form-group { margin-bottom: 14px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
+        .form-group input:focus { outline: none; border-color: #2563eb; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+        .btn-cancelar { background-color: #e5e7eb; color: #374151; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+        .btn-salvar { background-color: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
-    <div class="container mx-auto p-6">
-        <header class="flex justify-between items-center mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">📦 Gerenciador de Almoxerifado</h1>
-            <button onclick="abrirModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow">
-                + Novo Item
-            </button>
+<body>
+    <div class="container">
+        <header>
+            <h1>📦 Gerenciador de Almoxerifado</h1>
+            <button onclick="abrirModal()" class="btn-novo">+ Novo Item</button>
         </header>
 
-        <!-- Tabela de Itens -->
-        <div class="bg-white rounded-xl shadow overflow-hidden">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
+        <div class="tabela-container">
+            <table>
+                <thead>
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cód</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qtd</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Local</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                        <th>Cód</th>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Qtd</th>
+                        <th>Status</th>
+                        <th>Local</th>
+                        <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody id="tabela-corpo" class="divide-y divide-gray-200">
-                    <!-- Preenchido via Javascript -->
+                <tbody id="tabela-corpo">
+                    <!-- Preenchido automaticamente -->
                 </tbody>
             </table>
         </div>
     </div>
 
     <!-- Modal Novo Item -->
-    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded-xl w-96 shadow-xl">
-            <h2 class="text-xl font-bold mb-4 text-gray-800">Cadastrar Produto</h2>
-            <form id="form-produto" onsubmit="salvarProduto(event)" class="space-y-4">
-                <input type="text" id="codigo" placeholder="Código (ex: MAT004)" required class="w-full border p-2 rounded">
-                <input type="text" id="nome" placeholder="Nome do Item" required class="w-full border p-2 rounded">
-                <input type="text" id="categoria" placeholder="Categoria" class="w-full border p-2 rounded">
-                <input type="number" id="quantidade" placeholder="Quantidade Inicial" required class="w-full border p-2 rounded">
-                <input type="number" id="quantidade_minima" placeholder="Aviso de Estoque Mínimo" required class="w-full border p-2 rounded">
-                <input type="text" id="localizacao" placeholder="Localização (Prateleira/Armário)" class="w-full border p-2 rounded">
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="fecharModal()" class="bg-gray-300 px-4 py-2 rounded">Cancelar</button>
-                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar</button>
+    <div id="modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Cadastrar Produto</h2>
+            <form id="form-produto" onsubmit="salvarProduto(event)">
+                <div class="form-group"><input type="text" id="codigo" placeholder="Código (ex: MAT004)" required></div>
+                <div class="form-group"><input type="text" id="nome" placeholder="Nome do Item" required></div>
+                <div class="form-group"><input type="text" id="categoria" placeholder="Categoria"></div>
+                <div class="form-group"><input type="number" id="quantidade" placeholder="Quantidade Inicial" required></div>
+                <div class="form-group"><input type="number" id="quantidade_minima" placeholder="Aviso de Estoque Mínimo" required></div>
+                <div class="form-group"><input type="text" id="localizacao" placeholder="Localização (Prateleira/Armário)"></div>
+                <div class="modal-actions">
+                    <button type="button" onclick="fecharModal()" class="btn-cancelar">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar</button>
                 </div>
             </form>
         </div>
@@ -64,27 +92,27 @@
                 corpo.innerHTML = '';
 
                 if (!Array.isArray(dados)) {
-                    corpo.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Erro ao carregar dados do banco. Verifique a chave DATABASE_URL.</td></tr>`;
+                    corpo.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red; padding: 20px;">Nenhum dado retornado ou erro na DATABASE_URL.</td></tr>`;
                     return;
                 }
 
                 dados.forEach(item => {
                     const estoqueBaixo = item.quantidade <= item.quantidade_minima;
                     corpo.innerHTML += `
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 font-mono text-sm">${item.codigo}</td>
-                            <td class="px-6 py-4 font-semibold">${item.nome}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500">${item.categoria || '-'}</td>
-                            <td class="px-6 py-4 font-bold ${estoqueBaixo ? 'text-red-600' : 'text-green-600'}">${item.quantidade}</td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full ${estoqueBaixo ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
-                                    ${estoqueBaixo ? 'Repor Estoque' : 'OK'}
+                        <tr>
+                            <td style="font-family: monospace; font-weight: bold;">${item.codigo}</td>
+                            <td style="font-weight: 600;">${item.nome}</td>
+                            <td style="color: #6b7280;">${item.categoria || '-'}</td>
+                            <td class="${estoqueBaixo ? 'qtd-baixo' : 'qtd-ok'}">${item.quantidade}</td>
+                            <td>
+                                <span class="status-badge ${estoqueBaixo ? 'status-baixo' : 'status-ok'}">
+                                    ${estoqueBaixo ? 'Repor' : 'OK'}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-sm text-gray-500">${item.localizacao || '-'}</td>
-                            <td class="px-6 py-4 space-x-2">
-                                <button onclick="alterarQtd(${item.id}, 1)" class="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded font-bold">+</button>
-                                <button onclick="alterarQtd(${item.id}, -1)" class="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded font-bold">-</button>
+                            <td style="color: #6b7280;">${item.localizacao || '-'}</td>
+                            <td>
+                                <button onclick="alterarQtd(${item.id}, 1)" class="btn-acao">+</button>
+                                <button onclick="alterarQtd(${item.id}, -1)" class="btn-acao">-</button>
                             </td>
                         </tr>
                     `;
@@ -125,8 +153,8 @@
             carregarEstoque();
         }
 
-        function abrirModal() { document.getElementById('modal').classList.remove('hidden'); }
-        function fecharModal() { document.getElementById('modal').classList.add('hidden'); }
+        function abrirModal() { document.getElementById('modal').style.display = 'flex'; }
+        function fecharModal() { document.getElementById('modal').style.display = 'none'; }
 
         carregarEstoque();
     </script>
