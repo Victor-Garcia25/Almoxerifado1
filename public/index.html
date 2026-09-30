@@ -3,47 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Almoxerifado Smart</title>
+    <title>Almoxerifado Pro - Frota & Histórico</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #f3f4f6; color: #1f2937; padding: 24px; }
         .container { max-width: 1200px; margin: 0 auto; }
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
         h1 { font-size: 28px; color: #111827; }
+        
+        /* Banner de Alerta Crítico */
+        .alerta-compra { display: none; background-color: #ef4444; color: white; padding: 16px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; text-align: center; font-size: 16px; animation: piscar 1.5s infinite; }
+        @keyframes piscar { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+        .secao-titulo { font-size: 20px; font-weight: bold; color: #374151; margin: 32px 0 12px 0; display: flex; align-items: center; gap: 8px; }
         .btn-novo { background-color: #2563eb; color: white; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .btn-novo:hover { background-color: #1d4ed8; }
-        .tabela-container { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e5e7eb; }
+        
+        .tabela-container { background-color: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e5e7eb; margin-bottom: 24px; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th { background-color: #f9fafb; padding: 14px 20px; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; border-bottom: 1px solid #e5e7eb; }
-        td { padding: 16px 20px; border-bottom: 1px solid #e5e7eb; font-size: 15px; }
+        td { padding: 14px 20px; border-bottom: 1px solid #e5e7eb; font-size: 14px; }
         tr:hover { background-color: #f9fafb; }
+        
         .status-badge { padding: 4px 8px; font-size: 12px; font-weight: 600; border-radius: 9999px; }
         .status-ok { background-color: #d1fae5; color: #065f46; }
         .status-baixo { background-color: #fee2e2; color: #991b1b; }
-        .qtd-ok { color: #16a34a; font-weight: bold; }
-        .qtd-baixo { color: #dc2626; font-weight: bold; }
-        .btn-acao { background-color: #e5e7eb; border: none; padding: 6px 12px; font-weight: bold; font-size: 16px; border-radius: 4px; cursor: pointer; margin-right: 4px; }
-        .btn-acao:hover { background-color: #d1d5db; }
+        .status-critico { background-color: #fef3c7; color: #92400e; }
         
-        /* Modal Estilizado Ocultável */
+        .btn-acao { border: none; padding: 6px 12px; font-weight: bold; font-size: 16px; border-radius: 4px; cursor: pointer; margin-right: 4px; }
+        .btn-add { background-color: #10b981; color: white; }
+        .btn-add:hover { background-color: #059669; }
+        .btn-sub { background-color: #ef4444; color: white; }
+        .btn-sub:hover { background-color: #dc2626; }
+        
+        /* Modais */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: white; padding: 24px; border-radius: 12px; width: 400px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
         .modal-content h2 { margin-bottom: 16px; font-size: 20px; color: #111827; }
         .form-group { margin-bottom: 14px; }
-        .form-group input { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
-        .form-group input:focus { outline: none; border-color: #2563eb; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: #4b5563; margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; }
         .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
         .btn-cancelar { background-color: #e5e7eb; color: #374151; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
         .btn-salvar { background-color: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+        
+        /* Cores Histórico */
+        .badge-entrada { background-color: #e6f4ea; color: #137333; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
+        .badge-saida { background-color: #fce8e6; color: #c5221f; padding: 2px 6px; border-radius: 4px; font-weight: bold; font-size: 11px; }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- Banner de Alerta de Compra -->
+        <div id="banner-alerta" class="alerta-compra">
+            ⚠️ ATENÇÃO: Existem peças com estoque CRÍTICO (1 ou 0 unidades)! Necessário emitir pedido de compra urgente.
+        </div>
+
         <header>
             <h1>📦 Gerenciador de Almoxerifado</h1>
-            <button onclick="abrirModal()" class="btn-novo">+ Novo Item</button>
+            <button onclick="abrirModalCadastro()" class="btn-novo">+ Novo Item</button>
         </header>
 
+        <!-- SEÇÃO ESTOQUE ATUAL -->
+        <div class="secao-titulo">📋 Estoque Atual de Peças</div>
         <div class="tabela-container">
             <table>
                 <thead>
@@ -51,118 +73,110 @@
                         <th>Cód</th>
                         <th>Nome</th>
                         <th>Categoria</th>
-                        <th>Qtd</th>
+                        <th>Qtd Atual</th>
                         <th>Status</th>
-                        <th>Local</th>
-                        <th>Ações</th>
+                        <th>Localização</th>
+                        <th>Movimentar</th>
                     </tr>
                 </thead>
-                <tbody id="tabela-corpo">
-                    <tr><td colspan="7" style="text-align: center; padding: 20px; color: #6b7280;">Carregando estoque do banco de dados...</td></tr>
+                <tbody id="tabela-estoque">
+                    <tr><td colspan="7" style="text-align: center; padding: 20px;">Carregando estoque...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SEÇÃO HISTÓRICO -->
+        <div class="secao-titulo">📜 Histórico Recente de Entradas e Saídas</div>
+        <div class="tabela-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Data/Hora</th>
+                        <th>Cód</th>
+                        <th>Produto</th>
+                        <th>Operação</th>
+                        <th>Qtd</th>
+                        <th>Nº Frota</th>
+                        <th>Utilização / Destino</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-historico">
+                    <tr><td colspan="7" style="text-align: center; padding: 20px;">Carregando histórico...</td></tr>
                 </tbody>
             </table>
         </div>
     </div>
 
-    <!-- Modal Novo Item -->
-    <div id="modal" class="modal-overlay">
+    <!-- MODAL: CADASTRAR PRODUTO -->
+    <div id="modal-cadastro" class="modal-overlay">
         <div class="modal-content">
-            <h2>Cadastrar Produto</h2>
+            <h2>Cadastrar Novo Produto</h2>
             <form id="form-produto" onsubmit="salvarProduto(event)">
-                <div class="form-group"><input type="text" id="codigo" placeholder="Código (ex: MAT004)" required></div>
-                <div class="form-group"><input type="text" id="nome" placeholder="Nome do Item" required></div>
-                <div class="form-group"><input type="text" id="categoria" placeholder="Categoria"></div>
+                <div class="form-group"><input type="text" id="codigo" placeholder="Código da Peça (ex: PESS01)" required></div>
+                <div class="form-group"><input type="text" id="nome" placeholder="Nome do Item / Descrição" required></div>
+                <div class="form-group"><input type="text" id="categoria" placeholder="Categoria (ex: Motor, Filtro)"></div>
                 <div class="form-group"><input type="number" id="quantidade" placeholder="Quantidade Inicial" required></div>
                 <div class="form-group"><input type="number" id="quantidade_minima" placeholder="Aviso de Estoque Mínimo" required></div>
-                <div class="form-group"><input type="text" id="localizacao" placeholder="Localização (Prateleira/Armário)"></div>
+                <div class="form-group"><input type="text" id="localizacao" placeholder="Localização (Prateleira/Gaveta)"></div>
                 <div class="modal-actions">
-                    <button type="button" onclick="fecharModal()" class="btn-cancelar">Cancelar</button>
-                    <button type="submit" class="btn-salvar">Salvar</button>
+                    <button type="button" onclick="fecharModalCadastro()" class="btn-cancelar">Cancelar</button>
+                    <button type="submit" class="btn-salvar">Salvar Produto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: REGISTRAR SAÍDA OBRIGATÓRIA (FROTA E UTILIZAÇÃO) -->
+    <div id="modal-saida" class="modal-overlay">
+        <div class="modal-content">
+            <h2>📋 Registrar Saída de Peça</h2>
+            <p id="saida-info-item" style="font-size: 14px; margin-bottom: 16px; color: #4b5563; font-weight: 600;"></p>
+            <form id="form-saida" onsubmit="confirmarSaida(event)">
+                <input type="hidden" id="saida-id">
+                <div class="form-group">
+                    <label>Quantidade a Retirar:</label>
+                    <input type="number" id="saida-qtd" value="1" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Número da Frota / Equipamento:</label>
+                    <input type="text" id="saida-frota" placeholder="Ex: Caminhão 04, Trator B" required>
+                </div>
+                <div class="form-group">
+                    <label>Utilização da Peça:</label>
+                    <input type="text" id="saida-utilizacao" placeholder="Ex: Troca preventiva, Correção de vazamento" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" onclick="fecharModalSaida()" class="btn-cancelar">Cancelar</button>
+                    <button type="submit" class="btn-sub" style="padding: 8px 16px; border-radius: 6px; font-weight: bold; cursor: pointer;">Confirmar Saída</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
+        let itensEstoque = [];
+
+        async function inicializar() {
+            await carregarEstoque();
+            await carregarHistorico();
+        }
+
         async function carregarEstoque() {
             try {
                 const res = await fetch('/api/estoque');
-                const dados = await res.json();
-                const corpo = document.getElementById('tabela-corpo');
+                itensEstoque = await res.json();
+                const corpo = document.getElementById('tabela-estoque');
+                const banner = document.getElementById('banner-alerta');
                 corpo.innerHTML = '';
 
-                if (!Array.isArray(dados)) {
-                    corpo.innerHTML = `<tr><td colspan="7" style="text-align: center; color: red; padding: 20px; font-weight: bold;">Erro de Configuração: Certifique-se de preencher a variável DATABASE_URL nas configurações da Vercel.</td></tr>`;
-                    return;
-                }
+                let possuiCritico = false;
 
-                if (dados.length === 0) {
-                    corpo.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #6b7280; padding: 20px;">Nenhum produto cadastrado no almoxerifado.</td></tr>`;
-                    return;
-                }
+                if (!Array.isArray(itensEstoque)) return;
 
-                dados.forEach(item => {
+                itensEstoque.forEach(item => {
+                    if (item.quantidade <= 1) possuiCritico = true;
+
                     const estoqueBaixo = item.quantidade <= item.quantidade_minima;
-                    corpo.innerHTML += `
-                        <tr>
-                            <td style="font-family: monospace; font-weight: bold;">${item.codigo}</td>
-                            <td style="font-weight: 600;">${item.nome}</td>
-                            <td style="color: #6b7280;">${item.categoria || '-'}</td>
-                            <td class="${estoqueBaixo ? 'qtd-baixo' : 'qtd-ok'}">${item.quantidade}</td>
-                            <td>
-                                <span class="status-badge ${estoqueBaixo ? 'status-baixo' : 'status-ok'}">
-                                    ${estoqueBaixo ? 'Repor' : 'OK'}
-                                </span>
-                            </td>
-                            <td style="color: #6b7280;">${item.localizacao || '-'}</td>
-                            <td>
-                                <button onclick="alterarQtd(${item.id}, 1)" class="btn-acao">+</button>
-                                <button onclick="alterarQtd(${item.id}, -1)" class="btn-acao">-</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch (err) {
-                console.error(err);
-                document.getElementById('tabela-corpo').innerHTML = `<tr><td colspan="7" style="text-align: center; color: red; padding: 20px;">Não foi possível conectar ao servidor backend.</td></tr>`;
-            }
-        }
+                    let statusTxt = 'OK';
+                    let statusClasse = 'status-ok';
 
-        async function alterarQtd(id, valor) {
-            await fetch('/api/estoque', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, valor })
-            });
-            carregarEstoque();
-        }
-
-        async function salvarProduto(e) {
-            e.preventDefault();
-            const produto = {
-                codigo: document.getElementById('codigo').value,
-                nome: document.getElementById('nome').value,
-                categoria: document.getElementById('categoria').value,
-                quantidade: parseInt(document.getElementById('quantidade').value),
-                quantidade_minima: parseInt(document.getElementById('quantidade_minima').value),
-                localizacao: document.getElementById('localizacao').value
-            };
-
-            await fetch('/api/estoque', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(produto)
-            });
-
-            fecharModal();
-            document.getElementById('form-produto').reset();
-            carregarEstoque();
-        }
-
-        function abrirModal() { document.getElementById('modal').style.display = 'flex'; }
-        function fecharModal() { document.getElementById('modal').style.display = 'none'; }
-
-        carregarEstoque();
-    </script>
-</body>
-</html>
