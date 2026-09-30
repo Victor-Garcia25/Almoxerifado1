@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Almoxerifado Smart</title>
+    <script src="https://tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-6">
+        <header class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">📦 Gerenciador de Almoxerifado</h1>
+            <button onclick="abrirModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold shadow">
+                + Novo Item
+            </button>
+        </header>
+
+        <!-- Tabela de Itens -->
+        <div class="bg-white rounded-xl shadow overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cód</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nome</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Categoria</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Qtd</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Local</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-corpo" class="divide-y divide-gray-200">
+                    <!-- Preenchido via Javascript -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Novo Item -->
+    <div id="modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-6 rounded-xl w-96 shadow-xl">
+            <h2 class="text-xl font-bold mb-4 text-gray-800">Cadastrar Produto</h2>
+            <form id="form-produto" onsubmit="salvarProduto(event)" class="space-y-4">
+                <input type="text" id="codigo" placeholder="Código (ex: MAT004)" required class="w-full border p-2 rounded">
+                <input type="text" id="nome" placeholder="Nome do Item" required class="w-full border p-2 rounded">
+                <input type="text" id="categoria" placeholder="Categoria" class="w-full border p-2 rounded">
+                <input type="number" id="quantidade" placeholder="Quantidade Inicial" required class="w-full border p-2 rounded">
+                <input type="number" id="quantidade_minima" placeholder="Aviso de Estoque Mínimo" required class="w-full border p-2 rounded">
+                <input type="text" id="localizacao" placeholder="Localização (Prateleira/Armário)" class="w-full border p-2 rounded">
+                <div class="flex justify-end space-x-2">
+                    <button type="button" onclick="fecharModal()" class="bg-gray-300 px-4 py-2 rounded">Cancelar</button>
+                    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function carregarEstoque() {
+            try {
+                const res = await fetch('/api/estoque');
+                const dados = await res.json();
+                const corpo = document.getElementById('tabela-corpo');
+                corpo.innerHTML = '';
+
+                if (!Array.isArray(dados)) {
+                    corpo.innerHTML = `<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Erro ao carregar dados do banco. Verifique a chave DATABASE_URL.</td></tr>`;
+                    return;
+                }
+
+                dados.forEach(item => {
+                    const estoqueBaixo = item.quantidade <= item.quantidade_minima;
+                    corpo.innerHTML += `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 font-mono text-sm">${item.codigo}</td>
+                            <td class="px-6 py-4 font-semibold">${item.nome}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">${item.categoria || '-'}</td>
+                            <td class="px-6 py-4 font-bold ${estoqueBaixo ? 'text-red-600' : 'text-green-600'}">${item.quantidade}</td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full ${estoqueBaixo ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                                    ${estoqueBaixo ? 'Repor Estoque' : 'OK'}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-500">${item.localizacao || '-'}</td>
+                            <td class="px-6 py-4 space-x-2">
+                                <button onclick="alterarQtd(${item.id}, 1)" class="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded font-bold">+</button>
+                                <button onclick="alterarQtd(${item.id}, -1)" class="bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded font-bold">-</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function alterarQtd(id, valor) {
+            await fetch('/api/estoque', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, valor })
+            });
+            carregarEstoque();
+        }
+
+        async function salvarProduto(e) {
+            e.preventDefault();
+            const produto = {
+                codigo: document.getElementById('codigo').value,
+                nome: document.getElementById('nome').value,
+                categoria: document.getElementById('categoria').value,
+                quantidade: parseInt(document.getElementById('quantidade').value),
+                quantidade_minima: parseInt(document.getElementById('quantidade_minima').value),
+                localizacao: document.getElementById('localizacao').value
+            };
+
+            await fetch('/api/estoque', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(produto)
+            });
+
+            fecharModal();
+            document.getElementById('form-produto').reset();
+            carregarEstoque();
+        }
+
+        function abrirModal() { document.getElementById('modal').classList.remove('hidden'); }
+        function fecharModal() { document.getElementById('modal').classList.add('hidden'); }
+
+        carregarEstoque();
+    </script>
+</body>
+</html>
